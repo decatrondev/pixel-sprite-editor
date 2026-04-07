@@ -19,7 +19,7 @@ const isAuthenticated = (req, res, next) => {
 // --- Configuración de Multer para la Subida de Archivos ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const userUploadsPath = path.join(__dirname, `../public/uploads/${req.session.user.username}`);
+        const userUploadsPath = path.join(__dirname, `../uploads/${req.session.user.username}`);
         fs.ensureDirSync(userUploadsPath);
         cb(null, userUploadsPath);
     },
@@ -150,7 +150,7 @@ router.get('/load-project/:id', isAuthenticated, async (req, res) => {
 
         if (rows.length > 0) {
             const project = rows[0];
-            const imagePath = path.join(__dirname, '../public', project.image_path);
+            const imagePath = path.join(__dirname, '..', project.image_path);
 
             if (!await fs.pathExists(imagePath)) {
                 return res.status(404).json({
