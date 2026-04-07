@@ -1,0 +1,31 @@
+{
+  "name": "pixel-sprite-editor",
+  "version": "1.0.0",
+  "description": "Una herramienta para crear archivos de configuración JSON a partir de hojas de sprites.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon"
+  },
+  "keywords": [
+    "spritesheet",
+    "gamedev",
+    "pixelart",
+    "json"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "fs-extra": "^11.2.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

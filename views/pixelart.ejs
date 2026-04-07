@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelSprite - Editor de Pixel Art</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/pixelart.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+    
+    <!-- Contenedor de notificaciones -->
+    <div id="message-container" class="message-container"></div>
+    
+    <div class="pixelart-editor">
+        <div class="editor-layout">
+            
+            <!-- Panel de Herramientas (izquierda) -->
+            <div class="tools-panel">
+                <div class="panel-card">
+                    <h3 class="panel-title">Herramientas</h3>
+                    
+                    <!-- Grid de herramientas -->
+                    <div id="tools-grid" class="tools-grid">
+                        <button id="brush-tool" class="tool-btn active" title="Pincel">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9.5 3L12 5.5L19.5 13L21 11.5C21.6 10.9 21.6 9.9 21 9.3L14.7 3C14.1 2.4 13.1 2.4 12.5 3L9.5 6V3ZM5 7L3 9L12 18L14 16L5 7Z"/>
+                            </svg>
+                        </button>
+                        <button id="eraser-tool" class="tool-btn" title="Borrador">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M16.24 3.56L21.19 8.5C21.97 9.29 21.97 10.55 21.19 11.34L12 20.53C10.44 22.09 7.91 22.09 6.34 20.53L2.81 17C2.03 16.21 2.03 14.95 2.81 14.16L13.41 3.56C14.2 2.78 15.46 2.78 16.24 3.56M4.22 15.58L7.76 19.11C8.54 19.9 9.8 19.9 10.59 19.11L14.12 15.58L9.17 10.63L4.22 15.58Z"/>
+                            </svg>
+                        </button>
+                        <button id="bucket-tool" class="tool-btn" title="Balde de pintura">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19,11H5V9H19M19,7H5A2,2 0 0,0 3,9V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V9A2,2 0 0,0 19,7M19,3H5A2,2 0 0,0 3,5H21A2,2 0 0,1 19,3Z"/>
+                            </svg>
+                        </button>
+                        <button id="eyedropper-tool" class="tool-btn" title="Cuentagotas">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.35,10.04C18.67,6.59 15.64,4 12,4C10.73,4 9.59,4.55 8.79,5.5L12,8.71M12,15.5C15.64,15.5 18.67,12.91 19.35,9.46L21.94,9.88C21.18,14.08 17.12,17 12,17C6.88,17 2.82,14.08 2.06,9.88L4.65,9.46C5.33,12.91 8.36,15.5 12,15.5Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Tamaño de pincel -->
+                    <div class="section">
+                        <label class="section-label">Tamaño</label>
+                        <div class="size-buttons">
+                            <button class="size-btn active" data-size="1">1</button>
+                            <button class="size-btn" data-size="2">2</button>
+                            <button class="size-btn" data-size="3">3</button>
+                            <button class="size-btn" data-size="4">4</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Color actual -->
+                    <div class="section">
+                        <label class="section-label">Color</label>
+                        <div class="color-selector">
+                            <div id="current-color" class="current-color" style="background-color: #000000;"></div>
+                            <input type="color" id="color-picker" value="#000000" class="color-picker">
+                        </div>
+                        <input type="text" id="color-input" value="#000000" class="color-input">
+                    </div>
+                    
+                    <!-- Paleta de colores -->
+                    <div class="section">
+                        <label class="section-label">Paleta</label>
+                        <div id="color-palette" class="color-palette"></div>
+                    </div>
+                    
+                    <!-- NUEVO: Color de fondo para exportación -->
+                    <div class="section">
+                        <label class="section-label">Color de Fondo (Exportar)</label>
+                        <div class="background-color-options">
+                            <label class="radio-option">
+                                <input type="radio" name="bg-color" value="transparent" checked>
+                                <span>Transparente</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="bg-color" value="white">
+                                <span>Blanco</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="bg-color" value="custom">
+                                <span>Personalizado</span>
+                            </label>
+                        </div>
+                        <div id="custom-bg-color-picker" style="display: none; margin-top: 0.5rem;">
+                            <input type="color" id="bg-color-picker" value="#FFFFFF" class="color-picker" style="width: 100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Área principal del canvas -->
+            <div class="canvas-area">
+                <div class="panel-card">
+                    <!-- Controles superiores -->
+                    <div class="canvas-controls">
+                        <!-- Dimensiones del canvas - CORREGIDO: cambiar default de 32 a 64 -->
+                        <div class="control-group">
+                            <label>Ancho:</label>
+                            <input type="number" id="canvas-width" value="64" min="8" max="256" class="size-input">
+                            <label>Alto:</label>
+                            <input type="number" id="canvas-height" value="64" min="8" max="256" class="size-input">
+                            <button id="apply-size-btn" class="btn btn-primary">Aplicar</button>
+                        </div>
+                        
+                        <!-- Controles de zoom -->
+                        <div class="control-group">
+                            <button id="zoom-out" class="zoom-btn" title="Zoom Out">-</button>
+                            <span id="zoom-level" class="zoom-level">10x</span>
+                            <button id="zoom-in" class="zoom-btn" title="Zoom In">+</button>
+                        </div>
+                        
+                        <!-- Grid toggle -->
+                        <div class="control-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-grid" checked>
+                                <span class="checkmark"></span>
+                                Mostrar Grid
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Canvas container -->
+                    <div id="canvas-container" class="canvas-container">
+                        <canvas id="pixel-canvas" class="pixel-canvas"></canvas>
+                        <canvas id="grid-overlay" class="grid-overlay"></canvas>
+                    </div>
+                    
+                    <!-- Controles inferiores -->
+                    <div class="canvas-footer">
+                        <!-- Undo/Redo -->
+                        <div class="control-group">
+                            <button id="undo-btn" class="btn btn-secondary" disabled>↶ Deshacer</button>
+                            <button id="redo-btn" class="btn btn-secondary" disabled>↷ Rehacer</button>
+                        </div>
+                        
+                        <!-- Botones de exportación -->
+                        <div class="control-group">
+                            <button id="export-png-btn" class="btn btn-export">📄 Exportar Frame</button>
+                            <button id="export-all-frames-btn" class="btn btn-export">📦 Exportar Todo</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Panel de control de frames - CORREGIDO: siempre visible -->
+                <div class="panel-card frames-panel">
+                    <div class="frames-header">
+                        <h3 class="panel-title">Frames de Animación</h3>
+                    </div>
+                    
+                    <div class="frames-controls">
+                        <!-- Navegación de frames -->
+                        <div class="frame-navigation">
+                            <button id="prev-frame-btn" class="frame-nav-btn" title="Frame anterior">◀</button>
+                            <span id="frame-counter" class="frame-counter">1/1</span>
+                            <button id="next-frame-btn" class="frame-nav-btn" title="Frame siguiente">▶</button>
+                        </div>
+                        
+                        <!-- Acciones de frames -->
+                        <div class="frame-actions">
+                            <button id="add-frame-btn" class="btn btn-success">+ Nuevo</button>
+                            <button id="duplicate-frame-btn" class="btn btn-primary">📋 Duplicar</button>
+                            <button id="delete-frame-btn" class="btn btn-danger">🗑️ Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel derecho (Proyecto y Preview) -->
+            <div class="sidebar-panel">
+                <!-- Preview estático -->
+                <div class="panel-card">
+                    <h3 class="panel-title">Vista Previa</h3>
+                    <div class="preview-container">
+                        <canvas id="preview-canvas" class="preview-canvas" width="64" height="64"></canvas>
+                    </div>
+                </div>
+                
+                <!-- NUEVO: Panel de animación GIF -->
+                <div class="panel-card animation-panel">
+                    <h3 class="panel-title">🎬 Animación</h3>
+                    
+                    <!-- Canvas de animación -->
+                    <div class="animation-container">
+                        <canvas id="animation-canvas" class="animation-canvas" width="64" height="64"></canvas>
+                        <div class="animation-overlay" id="animation-overlay" style="display: none;">
+                            <div class="play-icon">▶</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Controles de animación -->
+                    <div class="animation-controls">
+                        <button id="animation-play-btn" class="btn btn-primary animation-btn">
+                            <span class="play-icon">▶</span> Reproducir
+                        </button>
+                        <button id="animation-pause-btn" class="btn btn-secondary animation-btn" style="display: none;">
+                            <span class="pause-icon">⏸</span> Pausar
+                        </button>
+                    </div>
+                    
+                    <!-- Configuración de velocidad -->
+                    <div class="animation-speed">
+                        <label class="section-label">Velocidad (FPS)</label>
+                        <div class="speed-controls">
+                            <input type="range" id="animation-speed-slider" min="1" max="20" value="8" class="speed-slider">
+                            <span id="animation-speed-display" class="speed-display">8 FPS</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Información de frames -->
+                    <div class="animation-info">
+                        <div class="info-item">
+                            <span class="info-label">Frames:</span>
+                            <span id="animation-frame-count" class="info-value">1</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Duración:</span>
+                            <span id="animation-duration" class="info-value">0.1s</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Proyecto (Solo visible si está logueado) -->
+                <% if (user) { %>
+                <div class="panel-card">
+                    <h3 class="panel-title">Proyecto</h3>
+                    
+                    <!-- Guardar proyecto -->
+                    <div class="section">
+                        <label class="section-label">Nombre del proyecto</label>
+                        <input type="text" id="project-name" placeholder="Mi pixel art" class="text-input">
+                        <button id="save-project-btn" class="btn btn-primary btn-full">Guardar Proyecto</button>
+                    </div>
+                    
+                    <!-- Nuevo proyecto -->
+                    <div class="section">
+                        <button id="new-project-btn" class="btn btn-secondary btn-full">Nuevo Proyecto</button>
+                    </div>
+                    
+                    <!-- Lista de proyectos -->
+                    <div class="section">
+                        <h4 class="section-title">Mis Proyectos</h4>
+                        <div id="projects-list" class="projects-list"></div>
+                    </div>
+                </div>
+                <% } else { %>
+                <!-- Mensaje para usuarios no autenticados -->
+                <div class="panel-card">
+                    <h3 class="panel-title">💾 Guardar Proyectos</h3>
+                    <div class="section">
+                        <p style="text-align: center; color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+                            Crea una cuenta gratuita para guardar y gestionar tus proyectos de pixel art.
+                        </p>
+                        <a href="/auth/register" class="btn btn-primary btn-full" style="margin-bottom: 0.5rem; display: block; text-align: center; text-decoration: none;">
+                            Crear Cuenta
+                        </a>
+                        <a href="/auth/login" class="btn btn-secondary btn-full" style="display: block; text-align: center; text-decoration: none;">
+                            Iniciar Sesión
+                        </a>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+    
+    <%- include('partials/footer') %>
+    
+    <!-- Scripts -->
+    <script type="module" src="/js/pixelartEditor.js"></script>
+</body>
+</html>

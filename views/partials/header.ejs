@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Sprites Pixel Art</title>
+    <!-- Usar Tailwind CSS solo en desarrollo local -->
+    <% if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') { %>
+        <script src="https://cdn.tailwindcss.com"></script>
+    <% } else { %>
+        <!-- En producción, usar CSS compilado -->
+        <link rel="stylesheet" href="/css/tailwind-compiled.css">
+    <% } %>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/pixelart.css">
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-indigo-600">PixelSprite Editor</a>
+                </div>
+                <div class="flex items-center">
+                    <a href="/editor" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Editor</a>
+                    <a href="/pixelart" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Pixel Art</a>
+                    <% if (user) { %>
+                        <span class="text-gray-700 px-3 py-2 text-sm font-medium">Hola, <%= user.username %></span>
+                        <a href="/auth/logout" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Cerrar Sesión</a>
+                    <% } else { %>
+                        <a href="/auth/login" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Iniciar Sesión</a>
+                        <a href="/auth/register" class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                            Registrarse
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main>

@@ -1,0 +1,192 @@
+<!-- --- Vista: Página del Editor (editor.ejs) --- -->
+<!-- Propósito: Contiene la interfaz principal para la edición de sprites. -->
+
+<%- include('partials/header') %>
+
+<main class="container mx-auto mt-8 p-4">
+    <!-- Fila de Controles Principales y Mensajes -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Columna Izquierda: Controles -->
+        <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow-md space-y-6">
+            <!-- Sección de Grid -->
+            <div>
+                <h3 class="font-bold text-lg mb-2 border-b pb-2 text-indigo-700">1. Definir Grid</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label for="frame-width" class="block text-sm font-medium text-gray-700 mb-1">Ancho (px)</label>
+                        <input type="number" id="frame-width" name="frame-width" value="64" min="1" max="512" 
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="frame-height" class="block text-sm font-medium text-gray-700 mb-1">Alto (px)</label>
+                        <input type="number" id="frame-height" name="frame-height" value="64" min="1" max="512"
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <button id="define-grid-btn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200">
+                        Aplicar Grid
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección de Animaciones -->
+            <div>
+                <h3 class="font-bold text-lg mb-2 border-b pb-2 text-green-700">2. Crear Animaciones</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label for="anim-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la Animación</label>
+                        <input type="text" id="anim-name" name="anim-name" placeholder="Ej: caminar, atacar" 
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <button id="create-anim-btn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+                        Crear Animación
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <h4 class="font-semibold mb-2 text-gray-700">Lista de Animaciones</h4>
+                    <ul id="animations-list" class="space-y-1 max-h-40 overflow-y-auto bg-gray-50 rounded p-2">
+                        <li class="text-gray-500 text-sm">Carga una imagen para empezar.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sección de Exportar -->
+            <div>
+                <h3 class="font-bold text-lg mb-2 border-b pb-2 text-blue-700">3. Exportar</h3>
+                <button id="generate-json-btn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                    Generar y Descargar JSON
+                </button>
+            </div>
+        </div>
+
+        <!-- Columna Central: Editor Visual -->
+        <div class="lg:col-span-2">
+            <div id="message-box" class="hidden p-3 rounded-md mb-4 text-center font-medium"></div>
+            
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h3 class="font-bold text-lg mb-4 text-gray-800">Editor Visual</h3>
+                <div id="drop-zone" class="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors flex items-center justify-center min-h-[300px] bg-gray-50">
+                    <input type="file" id="file-input" class="hidden" accept="image/*">
+                    
+                    <!-- Contenido inicial que se oculta -->
+                    <div class="absolute space-y-3">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900">Arrastra y suelta tu hoja de sprites aquí</h3>
+                        <p class="text-sm text-gray-500">o haz clic para seleccionar un archivo</p>
+                        <p class="text-xs text-gray-400">Formatos soportados: JPG, PNG, GIF</p>
+                    </div>
+                    
+                    <!-- Canvas principal -->
+                    <canvas id="editor-canvas" class="transition-opacity duration-300 opacity-0 max-w-full h-auto"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Preview de Animación -->
+        <div class="lg:col-span-1">
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="font-bold text-lg mb-3 border-b pb-2 text-purple-700">Vista Previa</h3>
+                <div class="flex justify-center mb-3">
+                    <div class="relative">
+                        <canvas id="animation-preview-canvas" width="128" height="128" 
+                                class="border-2 border-gray-300 bg-gray-100 rounded" 
+                                style="image-rendering: pixelated;"></canvas>
+                        <div id="no-preview" class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
+                            <div class="text-center">
+                                <div class="text-2xl mb-2">🎬</div>
+                                <div>Selecciona una animación</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Controles de reproducción -->
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center justify-center gap-2">
+                        <button id="play-pause-btn" class="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 transition duration-200">
+                            ⏸️ Pausar
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <label class="text-gray-600 font-medium">Velocidad:</label>
+                        <input type="range" id="speed-slider" min="1" max="30" value="8" class="flex-1">
+                        <span id="speed-display" class="text-gray-600 w-12 text-right">8 FPS</span>
+                    </div>
+                </div>
+
+                <!-- Área de mensajes fija -->
+                <div class="border-t pt-4">
+                    <div id="animation-messages" class="min-h-[60px] max-h-32 overflow-y-auto bg-gray-50 rounded p-3 text-sm">
+                        <div class="text-gray-500 text-center">
+                            Mensajes de animación aparecerán aquí
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Proyectos del Usuario (Solo visible si está logueado) -->
+    <% if (user) { %>
+    <div class="mt-8">
+        <!-- Layout responsivo mejorado -->
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <!-- Panel de gestión (izquierda en pantallas grandes) -->
+            <div class="xl:col-span-1 space-y-6">
+                <!-- Panel para guardar -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="font-bold text-lg mb-3 border-b pb-2 text-purple-700">💾 Gestionar Proyecto</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="project-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Proyecto</label>
+                            <input type="text" id="project-name" maxlength="50" 
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" 
+                                   placeholder="Mi Personaje Principal">
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="save-project-btn" class="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 font-medium transition duration-200">
+                                Guardar Nuevo Proyecto
+                            </button>
+                            <button id="new-project-btn" class="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 font-medium transition duration-200" title="Nuevo Proyecto">
+                                ➕
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel de proyectos (derecha en pantallas grandes) -->
+            <div class="xl:col-span-3">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="font-bold text-lg mb-3 border-b pb-2 text-orange-700">📂 Mis Proyectos</h3>
+                    <div class="max-h-64 overflow-y-auto">
+                        <ul id="projects-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <li class="text-gray-500 text-sm p-3 bg-gray-50 rounded text-center col-span-full">
+                                Cargando proyectos...
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } else { %>
+    <div class="mt-8 bg-gradient-to-r from-indigo-100 to-purple-100 p-6 rounded-lg text-center">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">¿Quieres guardar tus proyectos?</h3>
+        <p class="text-gray-600 mb-4">Crea una cuenta gratuita para guardar y gestionar todos tus proyectos de sprites.</p>
+        <div class="space-x-4">
+            <a href="/auth/register" class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 font-medium transition duration-200">
+                Crear Cuenta
+            </a>
+            <a href="/auth/login" class="inline-block bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 font-medium transition duration-200">
+                Iniciar Sesión
+            </a>
+        </div>
+    </div>
+    <% } %>
+</main>
+
+<script type="module" src="/js/editor.js"></script>
+
+<%- include('partials/footer') %>

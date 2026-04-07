@@ -1,0 +1,403 @@
+/* --- Estilos Principales Mejorados --- */
+
+/* Variables CSS para consistencia */
+:root {
+    --primary-color: #4f46e5;
+    --secondary-color: #7c3aed;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --error-color: #dc2626;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Configuración base del body */
+body {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--gray-800);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Estilos mejorados para el canvas principal */
+#editor-canvas {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    max-width: 100%;
+    height: auto;
+    image-rendering: pixelated; /* Para sprites pixel art */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+#editor-canvas.has-image {
+    cursor: crosshair;
+    box-shadow: var(--shadow-lg);
+    border: 2px solid var(--primary-color);
+}
+
+/* Tooltip para indicar funcionalidad de clic derecho */
+#editor-canvas.has-image::after {
+    content: "Clic izquierdo: Añadir frame | Clic derecho: Quitar frame";
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+#editor-canvas.has-image:hover::after {
+    opacity: 1;
+}
+
+/* Estilo para el workspace del editor */
+#editor-workspace {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+/* Drop zone mejorada */
+#drop-zone {
+    transition: all 0.3s ease;
+    background: linear-gradient(145deg, #ffffff 0%, var(--gray-50) 100%);
+    border-style: dashed;
+    border-width: 2px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+#drop-zone:hover {
+    border-color: var(--primary-color);
+    background: linear-gradient(145deg, #ffffff 0%, #eef2ff 100%);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+#drop-zone.bg-indigo-50 {
+    background: linear-gradient(145deg, #eef2ff 0%, #e0e7ff 100%);
+    border-color: var(--primary-color);
+}
+
+/* Ocultar el input de archivo */
+#file-input {
+    display: none;
+}
+
+/* Estilos para el canvas de preview */
+#animation-preview-canvas {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: 
+        linear-gradient(45deg, #f3f4f6 25%, transparent 25%), 
+        linear-gradient(-45deg, #f3f4f6 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #f3f4f6 75%), 
+        linear-gradient(-45deg, transparent 75%, #f3f4f6 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+#animation-preview-canvas:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+/* Controles de velocidad mejorados */
+.speed-controls {
+    background: var(--gray-50);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--gray-200);
+}
+
+#speed-slider {
+    accent-color: var(--secondary-color);
+    height: 4px;
+    border-radius: 2px;
+}
+
+#speed-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+#speed-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: var(--shadow-md);
+}
+
+/* Lista de animaciones mejorada */
+#animations-list {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+}
+
+#animations-list li {
+    transition: all 0.2s ease;
+}
+
+#animations-list li:hover {
+    background: var(--gray-100);
+    transform: translateX(4px);
+}
+
+#animations-list li.bg-indigo-100 {
+    background: linear-gradient(90deg, #eef2ff 0%, #e0e7ff 100%);
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Lista de proyectos mejorada */
+#projects-list li {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+#projects-list li:hover {
+    background: linear-gradient(90deg, #ffffff 0%, var(--gray-50) 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary-color);
+}
+
+/* Botones mejorados */
+button {
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Efecto ripple para botones */
+button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: width 0.3s ease, height 0.3s ease;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+button:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+button > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Inputs mejorados */
+input[type="text"], 
+input[type="number"], 
+input[type="email"], 
+input[type="password"] {
+    transition: all 0.2s ease;
+    border: 1px solid var(--gray-300);
+}
+
+input[type="text"]:focus, 
+input[type="number"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Message box mejorado */
+#message-box {
+    border-radius: 8px;
+    border: 1px solid;
+    backdrop-filter: blur(10px);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#message-box.bg-green-100 {
+    border-color: var(--success-color);
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+#message-box.bg-red-100 {
+    border-color: var(--error-color);
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+}
+
+#message-box.bg-blue-100 {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+/* Cards mejoradas */
+.bg-white {
+    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
+    border: 1px solid var(--gray-200);
+    transition: all 0.3s ease;
+}
+
+.bg-white:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* Navegación mejorada */
+nav {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+nav a {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: all 0.2s ease;
+    transform: translateX(-50%);
+}
+
+nav a:hover::after {
+    width: 100%;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-100);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
+}
+
+/* Responsive mejoras */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    #drop-zone {
+        min-height: 200px;
+    }
+    
+    .grid {
+        gap: 16px;
+    }
+}
+
+/* Animaciones de carga */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Estado de no preview */
+#no-preview {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+}
+
+/* Mejoras visuales adicionales */
+.border-b {
+    border-image: linear-gradient(90deg, var(--primary-color), transparent) 1;
+}
+
+/* Efectos de enfoque mejorados */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}

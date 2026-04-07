@@ -1,0 +1,216 @@
+<!-- Vista: Página de Inicio (index.ejs) -->
+<!-- Propósito: Landing page profesional de la aplicación. -->
+
+<%- include('partials/header') %>
+
+<main>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-20">
+        <div class="container mx-auto px-4 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    PixelSprite Editor
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed">
+                    La herramienta definitiva para crear y gestionar hojas de sprites para videojuegos
+                </p>
+                <p class="text-lg text-gray-500 mb-10 max-w-2xl mx-auto">
+                    Transforma tus sprite sheets en archivos de animación JSON listos para usar en cualquier motor de juegos. 
+                    Interfaz visual, preview en tiempo real y gestión de proyectos incluida.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/editor" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                        Comenzar Ahora
+                    </a>
+                    <% if (!user) { %>
+                    <a href="/auth/register" class="inline-block bg-white hover:bg-gray-50 text-indigo-600 font-semibold py-4 px-8 rounded-lg text-lg border-2 border-indigo-600 transition duration-300 shadow-lg hover:shadow-xl">
+                        Crear Cuenta Gratis
+                    </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Características Principales</h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                    Todo lo que necesitas para crear animaciones pixel art profesionales
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300">
+                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Editor Visual Intuitivo</h3>
+                    <p class="text-gray-600">
+                        Define grids automáticamente, selecciona frames con un clic y crea animaciones de forma visual. 
+                        Interfaz drag & drop incluida.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-gradient-to-br from-green-50 to-emerald-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300">
+                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M9 16h.01M12 6V4m0 2v2m0-2h2m-2 0H10"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Preview en Tiempo Real</h3>
+                    <p class="text-gray-600">
+                        Visualiza tus animaciones al instante con controles de velocidad, pausa/reproducción y 
+                        feedback visual inmediato.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-gradient-to-br from-purple-50 to-violet-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300">
+                    <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Exportación Profesional</h3>
+                    <p class="text-gray-600">
+                        Genera archivos JSON optimizados compatibles con Unity, Phaser, Godot y otros motores de juegos populares.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-gradient-to-br from-orange-50 to-amber-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300">
+                    <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Gestión de Proyectos</h3>
+                    <p class="text-gray-600">
+                        Guarda, carga y organiza todos tus proyectos en la nube. Edita proyectos existentes sin perder progreso.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="bg-gradient-to-br from-red-50 to-pink-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300">
+                    <div class="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Rápido y Eficiente</h3>
+                    <p class="text-gray-600">
+                        Optimizado para sprite sheets grandes. Procesamiento local sin límites de tamaño o velocidad.
+                    </p>
+                </div>
+
+                <!-- Feature 6 - Coming Soon -->
+                <div class="bg-gradient-to-br from-gray-50 to-slate-100 p-8 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border-2 border-dashed border-gray-300">
+                    <div class="w-12 h-12 bg-gray-400 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-600 mb-4">Editor de Pixel Art</h3>
+                    <p class="text-gray-500 mb-3">
+                        Próximamente: Crea sprites desde cero con herramientas de dibujo pixel art integradas.
+                    </p>
+                    <span class="inline-block bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                        PRÓXIMAMENTE
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workflow Section -->
+    <section class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Flujo de Trabajo Simple</h2>
+                <p class="text-xl text-gray-600">En solo 3 pasos tendrás tus animaciones listas</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Sube tu Sprite Sheet</h3>
+                    <p class="text-gray-600">
+                        Arrastra y suelta tu hoja de sprites. Formatos PNG, JPG y GIF soportados.
+                    </p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Define Grid y Animaciones</h3>
+                    <p class="text-gray-600">
+                        Configura el tamaño de frames y crea animaciones seleccionando los fotogramas.
+                    </p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Exporta y Usa</h3>
+                    <p class="text-gray-600">
+                        Descarga el JSON generado e impórtalo directamente en tu motor de juegos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl font-bold text-white mb-6">
+                ¿Listo para crear animaciones increíbles?
+            </h2>
+            <p class="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
+                Únete a cientos de desarrolladores que ya utilizan PixelSprite Editor para sus proyectos
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/editor" class="inline-block bg-white text-indigo-600 font-semibold py-4 px-8 rounded-lg text-lg transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    Prueba sin Registro
+                </a>
+                <% if (!user) { %>
+                <a href="/auth/register" class="inline-block bg-transparent border-2 border-white text-white hover:bg-white hover:text-indigo-600 font-semibold py-4 px-8 rounded-lg text-lg transition duration-300">
+                    Crear Cuenta Premium
+                </a>
+                <% } else { %>
+                <a href="/editor" class="inline-block bg-transparent border-2 border-white text-white hover:bg-white hover:text-indigo-600 font-semibold py-4 px-8 rounded-lg text-lg transition duration-300">
+                    Ir al Editor
+                </a>
+                <% } %>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Info -->
+    <section class="py-12 bg-gray-900 text-gray-300">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg mb-4">
+                Compatible con Unity, Phaser, Godot, GameMaker Studio y más
+            </p>
+            <div class="flex justify-center space-x-8 text-sm">
+                <span>✓ Sin límites de tamaño</span>
+                <span>✓ Procesamiento local</span>
+                <span>✓ Exportación optimizada</span>
+                <span>✓ Totalmente gratuito</span>
+            </div>
+        </div>
+    </section>
+</main>
+
+<%- include('partials/footer') %>
