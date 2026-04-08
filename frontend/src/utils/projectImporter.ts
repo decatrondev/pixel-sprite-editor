@@ -172,6 +172,23 @@ async function loadImageFrames(data: ArrayBuffer, type: string): Promise<Project
     return ase.frames.map(f => ({ imageData: f.imageData, duration: f.duration }));
   }
 
+  if (type === 'image') {
+    const blob = new Blob([data], { type: 'image/png' });
+    const url = URL.createObjectURL(blob);
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = new OffscreenCanvas(img.width, img.height);
+        const ctx = c.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        resolve([{ imageData: ctx.getImageData(0, 0, img.width, img.height), duration: 100 }]);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve([]); };
+      img.src = url;
+    });
+  }
+
   if (type === 'gif') {
     // Try ImageDecoder API for animated GIFs
     if ('ImageDecoder' in window) {
