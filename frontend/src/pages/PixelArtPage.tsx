@@ -11,6 +11,8 @@ import { FramePanel } from '../components/pixelart/FramePanel';
 import { CanvasControls } from '../components/pixelart/CanvasControls';
 import { ExportDialog } from '../components/pixelart/ExportDialog';
 import { ProjectPanel } from '../components/pixelart/ProjectPanel';
+import { AnimationPanel } from '../components/pixelart/AnimationPanel';
+import { AnimationPreview } from '../components/pixelart/AnimationPreview';
 import { toast } from '../components/common/Toast';
 import { AsepriteImport } from '../components/common/AsepriteImport';
 import type { AsepriteFile } from '../utils/aseprite';
@@ -26,7 +28,9 @@ export function PixelArtPage() {
   const [colorPalette, setColorPalette] = useState<string[]>([...COLOR_PRESETS.default.colors]);
   const [showExport, setShowExport] = useState(false);
   const [_projectId, setProjectId] = useState<number | null>(null);
-  const [_projectName, setProjectName] = useState('');
+  const [projectName, setProjectName] = useState('Mi Pixel Art');
+  const [pixelAnimations, setPixelAnimations] = useState<Record<string, { frames: number[]; speed: number }>>({});
+  const [activePixelAnim, setActivePixelAnim] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gridCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -396,6 +400,58 @@ export function PixelArtPage() {
     }, 0);
   }, [pixelCanvas, history, frames, getCtx, drawGrid]);
 
+  // Animation handlers
+  const handleCreateAnim = useCallback((name: string) => {
+    setPixelAnimations(prev => ({ ...prev, [name]: { frames: [], speed: 8 } }));
+    setActivePixelAnim(name);
+  }, []);
+
+  const handleDeleteAnim = useCallback((name: string) => {
+    setPixelAnimations(prev => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    if (activePixelAnim === name) setActivePixelAnim(null);
+  }, [activePixelAnim]);
+
+  const handleRenameAnim = useCallback((oldName: string, newName: string) => {
+    setPixelAnimations(prev => {
+      const next: Record<string, { frames: number[]; speed: number }> = {};
+      for (const [key, val] of Object.entries(prev)) {
+        next[key === oldName ? newName : key] = val;
+      }
+      return next;
+    });
+    if (activePixelAnim === oldName) setActivePixelAnim(newName);
+  }, [activePixelAnim]);
+
+  const handleAddFrameToAnim = useCallback((name: string, frameIndex: number) => {
+    setPixelAnimations(prev => {
+      const anim = prev[name];
+      if (!anim) return prev;
+      return { ...prev, [name]: { ...anim, frames: [...anim.frames, frameIndex] } };
+    });
+  }, []);
+
+  const handleRemoveFrameFromAnim = useCallback((name: string, index: number) => {
+    setPixelAnimations(prev => {
+      const anim = prev[name];
+      if (!anim) return prev;
+      const newFrames = [...anim.frames];
+      newFrames.splice(index, 1);
+      return { ...prev, [name]: { ...anim, frames: newFrames } };
+    });
+  }, []);
+
+  const handleAnimSpeedChange = useCallback((name: string, speed: number) => {
+    setPixelAnimations(prev => {
+      const anim = prev[name];
+      if (!anim) return prev;
+      return { ...prev, [name]: { ...anim, speed } };
+    });
+  }, []);
+
   const currentSettings: EditorSettings = {
     showGrid,
     brushSize,
@@ -542,6 +598,26 @@ export function PixelArtPage() {
             onPrevFrame={handlePrevFrame}
             onNextFrame={handleNextFrame}
           />
+          <AnimationPanel
+            animations={pixelAnimations}
+            activeAnimation={activePixelAnim}
+            frameCount={frames.frameCount}
+            currentFrameIndex={frames.currentFrameIndex}
+            onSelect={setActivePixelAnim}
+            onCreate={handleCreateAnim}
+            onDelete={handleDeleteAnim}
+            onRename={handleRenameAnim}
+            onAddFrame={handleAddFrameToAnim}
+            onRemoveFrame={handleRemoveFrameFromAnim}
+            onSpeedChange={handleAnimSpeedChange}
+          />
+          <AnimationPreview
+            animations={pixelAnimations}
+            activeAnimation={activePixelAnim}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+            getAllFramesAsDataURLs={frames.getAllFramesAsDataURLs}
+          />
           <ProjectPanel
             canvasRef={canvasRef}
             canvasWidth={canvasWidth}
@@ -566,6 +642,9 @@ export function PixelArtPage() {
         frameCount={frames.frameCount}
         palette={colorPalette}
         settings={currentSettings}
+        animations={pixelAnimations}
+        projectName={projectName}
+        onProjectNameChange={setProjectName}
       />
     </div>
   );

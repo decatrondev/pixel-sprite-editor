@@ -11,6 +11,9 @@ interface Props {
   frameCount: number;
   palette?: string[];
   settings?: object;
+  animations?: Record<string, { frames: number[]; speed: number }>;
+  projectName?: string;
+  onProjectNameChange?: (name: string) => void;
 }
 
 type BgMode = 'transparent' | 'white' | 'custom';
@@ -25,7 +28,11 @@ export function ExportDialog({
   frameCount,
   palette,
   settings,
+  animations,
+  projectName: initialProjectName,
+  onProjectNameChange,
 }: Props) {
+  const [exportName, setExportName] = useState(initialProjectName || 'Mi Pixel Art');
   const [bgMode, setBgMode] = useState<BgMode>('transparent');
   const [bgCustomColor, setBgCustomColor] = useState('#000000');
   const [includeCurrentFrame, setIncludeCurrentFrame] = useState(true);
@@ -39,13 +46,14 @@ export function ExportDialog({
   // Reset selections when opening
   useEffect(() => {
     if (open) {
+      setExportName(initialProjectName || 'Mi Pixel Art');
       setIncludeCurrentFrame(true);
       setIncludeAllFrames(false);
       setIncludeSpritesheet(false);
       setIncludeJson(false);
       setSpriteCols(Math.min(4, frameCount));
     }
-  }, [open, frameCount]);
+  }, [open, frameCount, initialProjectName]);
 
   if (!open) return null;
 
@@ -161,6 +169,7 @@ export function ExportDialog({
     const rows = Math.ceil(frameCount / cols);
 
     const projectData: Record<string, unknown> = {
+      name: exportName,
       meta: {
         app: 'PixelSprite Editor',
         version: '2.0',
@@ -179,6 +188,10 @@ export function ExportDialog({
       projectData.frames = Array.from({ length: frameCount }, (_, i) => ({
         file: `frames/frame_${String(i + 1).padStart(3, '0')}.png`,
         index: i,
+        x: (i % cols) * canvasWidth * spriteScale,
+        y: Math.floor(i / cols) * canvasHeight * spriteScale,
+        w: canvasWidth * spriteScale,
+        h: canvasHeight * spriteScale,
         duration: 100,
       }));
     }
@@ -192,6 +205,28 @@ export function ExportDialog({
         frameHeight: canvasHeight * spriteScale,
         scale: spriteScale,
       };
+
+      // Always include frame coordinates when spritesheet exists
+      if (!hasFrameFiles) {
+        projectData.frames = Array.from({ length: frameCount }, (_, i) => ({
+          index: i,
+          x: (i % cols) * canvasWidth * spriteScale,
+          y: Math.floor(i / cols) * canvasHeight * spriteScale,
+          w: canvasWidth * spriteScale,
+          h: canvasHeight * spriteScale,
+          duration: 100,
+        }));
+      }
+    }
+
+    // Include animations if any exist
+    if (animations && Object.keys(animations).length > 0) {
+      projectData.animations = Object.fromEntries(
+        Object.entries(animations).map(([name, anim]) => [
+          name,
+          { frames: anim.frames, speed: anim.speed, frameDuration: Math.round(1000 / anim.speed) }
+        ])
+      );
     }
 
     return JSON.stringify(projectData, null, 2);
@@ -223,6 +258,10 @@ export function ExportDialog({
 
     setExporting(true);
 
+    // Sync name back to parent
+    if (onProjectNameChange) onProjectNameChange(exportName);
+    const safeName = exportName.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim().replace(/\s+/g, '-') || 'pixel-art';
+
     try {
       const frameURLs = getAllFramesAsDataURLs(canvasWidth, canvasHeight);
 
@@ -231,18 +270,18 @@ export function ExportDialog({
         if (includeCurrentFrame) {
           const c = getCurrentFrameCanvas();
           const blob = await canvasToBlob(c);
-          downloadBlob(blob, 'pixel-art-frame.png');
+          downloadBlob(blob, `${safeName}-frame.png`);
           toast('Frame exportado como PNG', 'success');
         } else if (includeAllFrames) {
-          await exportFramesAsZip(frameURLs);
+          await exportFramesAsZip(frameURLs, safeName);
         } else if (includeSpritesheet) {
           const sheet = await generateSpritesheet(frameURLs);
           const blob = await canvasToBlob(sheet);
-          downloadBlob(blob, 'spritesheet.png');
+          downloadBlob(blob, `${safeName}-spritesheet.png`);
           toast('Spritesheet exportado', 'success');
         } else if (includeJson) {
           const json = generateProjectJSON(false, false);
-          downloadBlob(new Blob([json], { type: 'application/json' }), 'project.json');
+          downloadBlob(new Blob([json], { type: 'application/json' }), `${safeName}.json`);
           toast('JSON exportado', 'success');
         }
       } else {
@@ -273,11 +312,11 @@ export function ExportDialog({
 
         if (includeJson) {
           const json = generateProjectJSON(includeAllFrames, includeSpritesheet);
-          zip.file('project.json', json);
+          zip.file(`${safeName}.json`, json);
         }
 
         const blob = await zip.generateAsync({ type: 'blob' });
-        downloadBlob(blob, 'pixel-art-export.zip');
+        downloadBlob(blob, `${safeName}.zip`);
         toast('Proyecto exportado como ZIP', 'success');
       }
 
@@ -291,7 +330,7 @@ export function ExportDialog({
   }
 
   // Fallback for single all-frames export
-  async function exportFramesAsZip(frameURLs: string[]) {
+  async function exportFramesAsZip(frameURLs: string[], name: string = 'pixel-art') {
     try {
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
@@ -301,7 +340,7 @@ export function ExportDialog({
         zip.file(`frame_${String(i + 1).padStart(3, '0')}.png`, blob);
       }
       const blob = await zip.generateAsync({ type: 'blob' });
-      downloadBlob(blob, 'pixel-art-frames.zip');
+      downloadBlob(blob, `${name}-frames.zip`);
       toast('Frames exportados como ZIP', 'success');
     } catch {
       // Fallback: individual downloads
@@ -320,7 +359,20 @@ export function ExportDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <h3 className="text-lg font-bold text-gray-900 mb-5">Exportar</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Exportar</h3>
+
+        {/* Project name */}
+        <div className="mb-5">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Nombre del proyecto</h4>
+          <input
+            type="text"
+            value={exportName}
+            onChange={e => setExportName(e.target.value)}
+            placeholder="Mi Pixel Art"
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+          />
+          <p className="text-[10px] text-gray-400 mt-1">Se usa como nombre de archivo y en el JSON</p>
+        </div>
 
         {/* Background options */}
         <div className="mb-5">
