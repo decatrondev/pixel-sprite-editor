@@ -6,14 +6,8 @@ const router = express.Router();
 const db = require('../config/database');
 const fs = require('fs-extra');
 const path = require('path');
-
-// --- Middleware de Autenticación ---
-const isAuthenticated = (req, res, next) => {
-    if (req.session.user) {
-        return next();
-    }
-    res.status(401).json({ success: false, message: 'No autorizado. Por favor, inicia sesión.' });
-};
+const { isAuthenticated } = require('../middleware/auth');
+const { saveLimiter } = require('../middleware/rateLimiter');
 
 // --- Funciones auxiliares ---
 function validateProjectData(data) {
@@ -45,7 +39,7 @@ function sanitizeProjectName(name) {
 // --- Rutas de la API ---
 
 // [POST] /api/pixelart/save-project
-router.post('/save-project', isAuthenticated, async (req, res) => {
+router.post('/save-project', isAuthenticated, saveLimiter, async (req, res) => {
     const { name, width, height, imageData, frames_data, palette, settings, isUpdate, projectId } = req.body;
     const userId = req.session.user.id;
 

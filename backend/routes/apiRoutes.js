@@ -7,14 +7,8 @@ const db = require('../config/database');
 const fs = require('fs-extra');
 const path = require('path');
 const multer = require('multer');
-
-// --- Middleware de Autenticación ---
-const isAuthenticated = (req, res, next) => {
-    if (req.session.user) {
-        return next();
-    }
-    res.status(401).json({ success: false, message: 'No autorizado. Por favor, inicia sesión.' });
-};
+const { isAuthenticated } = require('../middleware/auth');
+const { saveLimiter } = require('../middleware/rateLimiter');
 
 // --- Configuración de Multer para la Subida de Archivos ---
 const storage = multer.diskStorage({
@@ -48,7 +42,7 @@ const upload = multer({
 // --- Rutas de la API ---
 
 // [POST] /api/save-project
-router.post('/save-project', isAuthenticated, upload.single('spriteImage'), async (req, res) => {
+router.post('/save-project', isAuthenticated, saveLimiter, upload.single('spriteImage'), async (req, res) => {
     const { projectName, jsonData, isUpdate, projectId } = req.body;
     const userId = req.session.user.id;
     const username = req.session.user.username;
