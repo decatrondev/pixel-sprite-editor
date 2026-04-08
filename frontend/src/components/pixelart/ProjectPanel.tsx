@@ -20,6 +20,8 @@ interface Props {
   canvasHeight: number;
   colorPalette: string[];
   settings: EditorSettings;
+  animations: Record<string, { frames: number[]; speed: number }>;
+  activeAnimation: string | null;
   getAllFramesAsDataURLs: (w: number, h: number) => string[];
   loadFramesFromData: (urls: string[], w: number, h: number) => Promise<void>;
   onLoadProject: (data: {
@@ -28,6 +30,8 @@ interface Props {
     imageData: string;
     palette: string[];
     settings: EditorSettings;
+    animations: Record<string, { frames: number[]; speed: number }>;
+    activeAnimation: string | null;
     projectId: number;
     projectName: string;
   }) => void;
@@ -39,12 +43,15 @@ export function ProjectPanel({
   canvasHeight,
   colorPalette,
   settings,
+  animations,
+  activeAnimation,
   getAllFramesAsDataURLs,
   loadFramesFromData,
   onLoadProject,
 }: Props) {
   const { user } = useAuthStore();
   const [projectName, setProjectName] = useState('');
+  const [currentProjectId, setCurrentProjectId] = useState<number | null>(null);
   const [projects, setProjects] = useState<ProjectInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -57,9 +64,7 @@ export function ProjectPanel({
     try {
       const { data } = await api.get('/api/pixelart/get-projects');
       if (data.success) setProjects(data.projects ?? []);
-    } catch {
-      // silently fail
-    }
+    } catch { /* silent */ }
   };
 
   const saveProject = async () => {
@@ -73,6 +78,8 @@ export function ProjectPanel({
     setLoading(true);
     try {
       const framesData = getAllFramesAsDataURLs(canvasWidth, canvasHeight);
+      const isUpdate = currentProjectId !== null;
+
       const body = {
         name: projectName,
         width: canvasWidth,
@@ -81,9 +88,14 @@ export function ProjectPanel({
         frames_data: JSON.stringify({ frames: framesData }),
         palette: JSON.stringify(colorPalette),
         settings: JSON.stringify(settings),
+        animations_data: { animations, activeAnimation },
+        isUpdate: isUpdate ? 'true' : undefined,
+        projectId: isUpdate ? currentProjectId : undefined,
       };
+
       const { data } = await api.post('/api/pixelart/save-project', body);
       if (data.success) {
+        if (data.projectId) setCurrentProjectId(data.projectId);
         toast('Proyecto guardado', 'success');
         loadProjects();
       } else {
@@ -102,25 +114,35 @@ export function ProjectPanel({
       const { data } = await api.get(`/api/pixelart/load-project/${id}`);
       if (data.success && data.project) {
         const p = data.project;
-        const palette = typeof p.palette === 'string' ? JSON.parse(p.palette) : p.palette;
-        const s = typeof p.settings === 'string' ? JSON.parse(p.settings) : p.settings;
-        const framesRaw = typeof p.frames_data === 'string' ? JSON.parse(p.frames_data) : p.frames_data;
+        const palette = typeof p.palette === 'string' ? JSON.parse(p.palette) : (p.palette || []);
+        const s = typeof p.settings === 'string' ? JSON.parse(p.settings) : (p.settings || {});
+        const framesRaw = typeof p.frames_data === 'string' ? JSON.parse(p.frames_data) : (p.frames_data || {});
+        const animData = typeof p.animations_data === 'string' ? JSON.parse(p.animations_data) : (p.animations_data || null);
 
         // Load frames
         if (framesRaw?.frames?.length) {
           await loadFramesFromData(framesRaw.frames, p.canvas_width, p.canvas_height);
         }
 
+        // Restore animations
+        const restoredAnims = animData?.animations || {};
+        const restoredActive = animData?.activeAnimation || null;
+
+        setCurrentProjectId(p.id);
+        setProjectName(p.project_name);
+
         onLoadProject({
           width: p.canvas_width,
           height: p.canvas_height,
           imageData: p.image_data,
-          palette: palette || colorPalette,
-          settings: s || settings,
+          palette: palette.length > 0 ? palette : colorPalette,
+          settings: s,
+          animations: restoredAnims,
+          activeAnimation: restoredActive,
           projectId: p.id,
           projectName: p.project_name,
         });
-        setProjectName(p.project_name);
+
         toast('Proyecto cargado', 'success');
       }
     } catch {
@@ -134,6 +156,10 @@ export function ProjectPanel({
     if (deleteId === null) return;
     try {
       await api.delete(`/api/pixelart/delete-project/${deleteId}`);
+      if (deleteId === currentProjectId) {
+        setCurrentProjectId(null);
+        setProjectName('');
+      }
       toast('Proyecto eliminado', 'success');
       loadProjects();
     } catch {
@@ -169,9 +195,13 @@ export function ProjectPanel({
           disabled={loading}
           className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
         >
-          {loading ? '...' : 'Guardar'}
+          {loading ? '...' : currentProjectId ? 'Actualizar' : 'Guardar'}
         </button>
       </div>
+
+      {currentProjectId && (
+        <p className="text-[10px] text-indigo-500 -mt-2 mb-3">Editando: {projectName}</p>
+      )}
 
       {/* Project list */}
       <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -179,7 +209,7 @@ export function ProjectPanel({
           <p className="text-xs text-gray-400">No hay proyectos guardados</p>
         )}
         {projects.map(p => (
-          <div key={p.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+          <div key={p.id} className={`flex items-center gap-2 p-2 rounded-lg ${p.id === currentProjectId ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50'}`}>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-gray-700 truncate">{p.project_name}</div>
               <div className="text-xs text-gray-400">{p.canvas_width}x{p.canvas_height}</div>
@@ -203,7 +233,7 @@ export function ProjectPanel({
       <ConfirmDialog
         open={deleteId !== null}
         title="Eliminar proyecto"
-        message="Esta accion no se puede deshacer. ¿Estas seguro?"
+        message="Esta accion no se puede deshacer."
         confirmText="Eliminar"
         danger
         onConfirm={deleteProject}

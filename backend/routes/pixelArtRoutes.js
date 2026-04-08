@@ -40,7 +40,7 @@ function sanitizeProjectName(name) {
 
 // [POST] /api/pixelart/save-project
 router.post('/save-project', isAuthenticated, saveLimiter, async (req, res) => {
-    const { name, width, height, imageData, frames_data, palette, settings, isUpdate, projectId } = req.body;
+    const { name, width, height, imageData, frames_data, palette, settings, animations_data, isUpdate, projectId } = req.body;
     const userId = req.session.user.id;
 
     try {
@@ -68,9 +68,9 @@ router.post('/save-project', isAuthenticated, saveLimiter, async (req, res) => {
             await db.pool.query(
                 `UPDATE pixelart_projects SET
                  canvas_width = $1, canvas_height = $2, image_data = $3,
-                 frames_data = $4, palette = $5, settings = $6
-                 WHERE id = $7 AND user_id = $8`,
-                [width, height, imageData, frames_data, JSON.stringify(palette), JSON.stringify(settings), projectId, userId]
+                 frames_data = $4, palette = $5, settings = $6, animations_data = $7
+                 WHERE id = $8 AND user_id = $9`,
+                [width, height, imageData, frames_data, JSON.stringify(palette), JSON.stringify(settings), animations_data ? JSON.stringify(animations_data) : null, projectId, userId]
             );
 
             return res.json({
@@ -102,9 +102,9 @@ router.post('/save-project', isAuthenticated, saveLimiter, async (req, res) => {
 
         const { rows } = await db.pool.query(
             `INSERT INTO pixelart_projects
-             (user_id, project_name, canvas_width, canvas_height, image_data, frames_data, palette, settings)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-            [userId, name, width, height, imageData, frames_data, JSON.stringify(palette), JSON.stringify(settings)]
+             (user_id, project_name, canvas_width, canvas_height, image_data, frames_data, palette, settings, animations_data)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+            [userId, name, width, height, imageData, frames_data, JSON.stringify(palette), JSON.stringify(settings), animations_data ? JSON.stringify(animations_data) : null]
         );
 
         res.json({

@@ -336,6 +336,8 @@ export function PixelArtPage() {
     imageData: string;
     palette: string[];
     settings: EditorSettings;
+    animations: Record<string, { frames: number[]; speed: number }>;
+    activeAnimation: string | null;
     projectId: number;
     projectName: string;
   }) => {
@@ -348,6 +350,10 @@ export function PixelArtPage() {
     setShowGrid(data.settings.showGrid ?? true);
     setProjectId(data.projectId);
     setProjectName(data.projectName);
+
+    // Restore animations
+    setPixelAnimations(data.animations || {});
+    setActivePixelAnim(data.activeAnimation || Object.keys(data.animations || {})[0] || null);
 
     setTimeout(() => {
       pixelCanvas.createCanvas(data.width, data.height, pixelCanvas.pixelSize);
@@ -681,6 +687,8 @@ export function PixelArtPage() {
             canvasHeight={canvasHeight}
             colorPalette={colorPalette}
             settings={currentSettings}
+            animations={pixelAnimations}
+            activeAnimation={activePixelAnim}
             getAllFramesAsDataURLs={frames.getAllFramesAsDataURLs}
             loadFramesFromData={frames.loadFramesFromData}
             onLoadProject={handleLoadProject}
