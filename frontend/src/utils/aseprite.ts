@@ -92,8 +92,8 @@ export function parseAseprite(buffer: ArrayBuffer): AsepriteFile {
   const transparentIndex = r.byte();
   r.skip(3); // ignore
   r.word();  // numColors
-  r.skip(2); // pixel width
-  r.skip(2); // pixel height
+  r.byte();  // pixel width (1 byte)
+  r.byte();  // pixel height (1 byte)
   r.skip(2); // grid x
   r.skip(2); // grid y
   r.skip(2); // grid width
