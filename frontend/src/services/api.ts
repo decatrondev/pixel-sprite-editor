@@ -12,7 +12,7 @@ const api = axios.create({
 export const authApi = {
   login: (data: LoginRequest) => api.post<AuthResponse>('/auth/login', data),
   register: (data: RegisterRequest) => api.post<AuthResponse>('/auth/register', data),
-  logout: () => api.get<AuthResponse>('/auth/logout'),
+  logout: () => api.post<AuthResponse>('/auth/logout'),
   me: () => api.get<AuthResponse>('/auth/me'),
 };
 

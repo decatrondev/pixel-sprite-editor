@@ -1,4 +1,5 @@
 // --- Rutas de Autenticación (authRoutes.js) ---
+// API JSON pura — sin EJS
 
 const express = require('express');
 const router = express.Router();
@@ -8,21 +9,6 @@ const { loginLimiter, registerLimiter } = require('../middleware/rateLimiter');
 const { registerSchema, loginSchema } = require('../middleware/validation');
 const { isAuthenticated } = require('../middleware/auth');
 
-// --- Vistas (EJS temporal) ---
-router.get('/register', (req, res) => {
-    res.render('register', { errors: [], user: req.session.user || null });
-});
-
-router.get('/login', (req, res) => {
-    res.render('login', { errors: [], user: req.session.user || null });
-});
-
-// Helper: detectar si el request espera JSON
-function wantsJson(req) {
-    return req.headers['content-type']?.includes('application/json') ||
-           req.headers.accept?.includes('application/json');
-}
-
 // --- POST /auth/register ---
 router.post('/register', registerLimiter, async (req, res) => {
     const { username, email, password, password2 } = req.body;
@@ -30,10 +16,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     const result = registerSchema.safeParse({ username, email, password, password2 });
     if (!result.success) {
         const errors = result.error.errors.map(e => ({ msg: e.message }));
-        if (wantsJson(req)) {
-            return res.status(400).json({ success: false, errors, message: errors[0].msg });
-        }
-        return res.render('register', { errors, user: req.session.user || null });
+        return res.status(400).json({ success: false, errors, message: errors[0].msg });
     }
 
     try {
@@ -41,11 +24,7 @@ router.post('/register', registerLimiter, async (req, res) => {
             'SELECT * FROM users WHERE username = $1 OR email = $2', [username, email]
         );
         if (users.length > 0) {
-            const errors = [{ msg: 'El nombre de usuario o el email ya están registrados' }];
-            if (wantsJson(req)) {
-                return res.status(409).json({ success: false, errors, message: errors[0].msg });
-            }
-            return res.render('register', { errors, user: req.session.user || null });
+            return res.status(409).json({ success: false, message: 'El nombre de usuario o el email ya estan registrados.' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
@@ -54,17 +33,10 @@ router.post('/register', registerLimiter, async (req, res) => {
             [username, email, hashedPassword]
         );
 
-        if (wantsJson(req)) {
-            return res.json({ success: true, message: 'Cuenta creada correctamente.' });
-        }
-        res.redirect('/auth/login');
-
+        res.json({ success: true, message: 'Cuenta creada correctamente.' });
     } catch (err) {
         console.error('Error en registro:', err);
-        if (wantsJson(req)) {
-            return res.status(500).json({ success: false, message: 'Error en el servidor.' });
-        }
-        res.status(500).send("Error en el servidor");
+        res.status(500).json({ success: false, message: 'Error en el servidor.' });
     }
 });
 
@@ -74,11 +46,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
-        const errors = [{ msg: 'Credenciales incorrectas.' }];
-        if (wantsJson(req)) {
-            return res.status(400).json({ success: false, message: 'Credenciales incorrectas.' });
-        }
-        return res.render('login', { errors, user: req.session.user || null });
+        return res.status(400).json({ success: false, message: 'Credenciales incorrectas.' });
     }
 
     try {
@@ -86,23 +54,15 @@ router.post('/login', loginLimiter, async (req, res) => {
             'SELECT * FROM users WHERE email = $1', [email]
         );
 
-        const genericError = [{ msg: 'Credenciales incorrectas.' }];
-
         if (users.length === 0) {
-            if (wantsJson(req)) {
-                return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
-            }
-            return res.render('login', { errors: genericError, user: req.session.user || null });
+            return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
         }
 
         const user = users[0];
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            if (wantsJson(req)) {
-                return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
-            }
-            return res.render('login', { errors: genericError, user: req.session.user || null });
+            return res.status(401).json({ success: false, message: 'Credenciales incorrectas.' });
         }
 
         // Actualizar last_login
@@ -111,11 +71,8 @@ router.post('/login', loginLimiter, async (req, res) => {
         // Regenerar session ID para prevenir session fixation
         req.session.regenerate((err) => {
             if (err) {
-                console.error('Error regenerando sesión:', err);
-                if (wantsJson(req)) {
-                    return res.status(500).json({ success: false, message: 'Error en el servidor.' });
-                }
-                return res.status(500).send("Error en el servidor");
+                console.error('Error regenerando sesion:', err);
+                return res.status(500).json({ success: false, message: 'Error en el servidor.' });
             }
 
             req.session.user = {
@@ -127,42 +84,29 @@ router.post('/login', loginLimiter, async (req, res) => {
 
             req.session.save((saveErr) => {
                 if (saveErr) {
-                    console.error('Error guardando sesión:', saveErr);
+                    console.error('Error guardando sesion:', saveErr);
                 }
-                if (wantsJson(req)) {
-                    return res.json({ success: true, user: req.session.user });
-                }
-                res.redirect('/editor');
+                res.json({ success: true, user: req.session.user });
             });
         });
-
     } catch (err) {
         console.error('Error en login:', err);
-        if (wantsJson(req)) {
-            return res.status(500).json({ success: false, message: 'Error en el servidor.' });
-        }
-        res.status(500).send("Error en el servidor");
+        res.status(500).json({ success: false, message: 'Error en el servidor.' });
     }
 });
 
-// --- GET /auth/logout ---
-router.get('/logout', (req, res) => {
+// --- POST /auth/logout ---
+router.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            if (wantsJson(req)) {
-                return res.status(500).json({ success: false, message: 'Error cerrando sesión.' });
-            }
-            return res.redirect('/editor');
+            return res.status(500).json({ success: false, message: 'Error cerrando sesion.' });
         }
         res.clearCookie('connect.sid');
-        if (wantsJson(req)) {
-            return res.json({ success: true, message: 'Sesión cerrada.' });
-        }
-        res.redirect('/');
+        res.json({ success: true, message: 'Sesion cerrada.' });
     });
 });
 
-// --- GET /auth/me --- (para frontend React)
+// --- GET /auth/me ---
 router.get('/me', isAuthenticated, (req, res) => {
     res.json({ success: true, user: req.session.user });
 });

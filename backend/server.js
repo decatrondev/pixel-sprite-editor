@@ -1,4 +1,5 @@
 // --- Servidor Principal (server.js) ---
+// API REST pura — frontend React servido por Nginx
 
 require('dotenv').config();
 const express = require('express');
@@ -11,7 +12,6 @@ const path = require('path');
 const { pool, createTables } = require('./config/database');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
-const mainRoutes = require('./routes/mainRoutes');
 const authRoutes = require('./routes/authRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const pixelArtRoutes = require('./routes/pixelArtRoutes');
@@ -36,10 +36,7 @@ app.use(cors({
 app.use(generalLimiter);
 
 // --- Middlewares ---
-const publicPath = path.join(__dirname, '..', 'public');
-app.use(express.static(publicPath));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '10mb' }));
 
@@ -58,21 +55,11 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000 // 24 horas
+        maxAge: 24 * 60 * 60 * 1000
     }
 }));
 
-app.use((req, res, next) => {
-    res.locals.user = req.session.user || null;
-    next();
-});
-
-// EJS temporal — se elimina en Fase 3
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '..', 'views'));
-
-// --- Rutas ---
-app.use('/', mainRoutes);
+// --- Rutas API ---
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/pixelart', pixelArtRoutes);
