@@ -564,6 +564,8 @@ export function PixelArtPage() {
         canvasHeight={canvasHeight}
         getAllFramesAsDataURLs={frames.getAllFramesAsDataURLs}
         frameCount={frames.frameCount}
+        palette={colorPalette}
+        settings={currentSettings}
       />
     </div>
   );

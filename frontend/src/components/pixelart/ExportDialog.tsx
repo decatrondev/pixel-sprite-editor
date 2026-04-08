@@ -9,6 +9,8 @@ interface Props {
   canvasHeight: number;
   getAllFramesAsDataURLs: (w: number, h: number) => string[];
   frameCount: number;
+  palette?: string[];
+  settings?: object;
 }
 
 export function ExportDialog({
@@ -19,6 +21,8 @@ export function ExportDialog({
   canvasHeight,
   getAllFramesAsDataURLs,
   frameCount,
+  palette,
+  settings,
 }: Props) {
   const [spriteCols, setSpriteCols] = useState(4);
   const [spriteScale, setSpriteScale] = useState(1);
@@ -31,6 +35,40 @@ export function ExportDialog({
     a.href = dataURL;
     a.download = filename;
     a.click();
+  };
+
+  const exportProjectJSON = () => {
+    const urls = getAllFramesAsDataURLs(canvasWidth, canvasHeight);
+    const projectData = {
+      meta: {
+        app: 'PixelSprite Editor',
+        version: '2.0',
+        format: 'pixelart-project',
+        created: new Date().toISOString(),
+      },
+      canvas: {
+        width: canvasWidth,
+        height: canvasHeight,
+      },
+      frames: urls.map((url, i) => ({
+        index: i,
+        duration: 100,
+        dataURL: url,
+      })),
+      totalFrames: urls.length,
+      palette: palette || [],
+      settings: settings || {},
+    };
+
+    const json = JSON.stringify(projectData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pixel-art-project.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Proyecto exportado como JSON', 'success');
   };
 
   const exportCurrentFrame = () => {
@@ -183,6 +221,19 @@ export function ExportDialog({
               </button>
             </div>
           )}
+        </div>
+
+        {/* JSON export */}
+        <div className="border-t pt-4 mt-4">
+          <button
+            onClick={exportProjectJSON}
+            className="w-full py-2 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition"
+          >
+            Exportar proyecto (JSON)
+          </button>
+          <p className="text-xs text-gray-400 mt-1 text-center">
+            Incluye frames, paleta y configuracion
+          </p>
         </div>
 
         <button
