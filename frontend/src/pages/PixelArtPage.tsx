@@ -17,7 +17,7 @@ import { toast } from '../components/common/Toast';
 import { AsepriteImport } from '../components/common/AsepriteImport';
 import { ImportDialog } from '../components/pixelart/ImportDialog';
 import type { AsepriteFile } from '../utils/aseprite';
-import type { ImportedProject } from '../utils/projectImporter';
+import type { ExportedProject } from '../utils/projectImporter';
 
 export function PixelArtPage() {
   const [canvasWidth, setCanvasWidth] = useState(64);
@@ -404,7 +404,7 @@ export function PixelArtPage() {
   }, [pixelCanvas, history, frames, getCtx, drawGrid]);
 
   // Project import handler
-  const handleProjectImport = useCallback((imported: ImportedProject) => {
+  const handleProjectImport = useCallback((imported: ExportedProject) => {
     const w = imported.width;
     const h = imported.height;
     setCanvasWidth(w);
@@ -415,11 +415,19 @@ export function PixelArtPage() {
       setColorPalette(imported.palette);
     }
 
-    // Set animations
+    // Flatten all animation frames into a single frame list
+    const allFrameImageDatas: ImageData[] = [];
     const anims: Record<string, { frames: number[]; speed: number }> = {};
-    for (const [name, anim] of Object.entries(imported.animations)) {
-      anims[name] = { frames: anim.frames, speed: anim.speed };
+
+    for (const anim of imported.animations) {
+      const frameIndices: number[] = [];
+      for (const frame of anim.frames) {
+        frameIndices.push(allFrameImageDatas.length);
+        allFrameImageDatas.push(frame.imageData);
+      }
+      anims[anim.name] = { frames: frameIndices, speed: anim.speed };
     }
+
     setPixelAnimations(anims);
     const firstAnim = Object.keys(anims)[0] ?? null;
     setActivePixelAnim(firstAnim);
@@ -430,13 +438,11 @@ export function PixelArtPage() {
       if (!ctx) return;
 
       // Load first frame to canvas
-      if (imported.frames.length > 0) {
-        ctx.putImageData(imported.frames[0].imageData, 0, 0);
+      if (allFrameImageDatas.length > 0) {
+        ctx.putImageData(allFrameImageDatas[0], 0, 0);
       }
 
-      // Load all frames as ImageData
-      const frameImageDatas = imported.frames.map(f => f.imageData);
-      frames.loadFromImageDatas(frameImageDatas, w, h);
+      frames.loadFromImageDatas(allFrameImageDatas, w, h);
 
       history.clearHistory();
       history.saveState(ctx, w, h);
