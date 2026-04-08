@@ -15,7 +15,9 @@ import { AnimationPanel } from '../components/pixelart/AnimationPanel';
 import { AnimationPreview } from '../components/pixelart/AnimationPreview';
 import { toast } from '../components/common/Toast';
 import { AsepriteImport } from '../components/common/AsepriteImport';
+import { ImportDialog } from '../components/pixelart/ImportDialog';
 import type { AsepriteFile } from '../utils/aseprite';
+import type { ImportedProject } from '../utils/projectImporter';
 
 export function PixelArtPage() {
   const [canvasWidth, setCanvasWidth] = useState(64);
@@ -27,6 +29,7 @@ export function PixelArtPage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [colorPalette, setColorPalette] = useState<string[]>([...COLOR_PRESETS.default.colors]);
   const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [_projectId, setProjectId] = useState<number | null>(null);
   const [projectName, setProjectName] = useState('Mi Pixel Art');
   const [pixelAnimations, setPixelAnimations] = useState<Record<string, { frames: number[]; speed: number }>>({});
@@ -400,6 +403,48 @@ export function PixelArtPage() {
     }, 0);
   }, [pixelCanvas, history, frames, getCtx, drawGrid]);
 
+  // Project import handler
+  const handleProjectImport = useCallback((imported: ImportedProject) => {
+    const w = imported.width;
+    const h = imported.height;
+    setCanvasWidth(w);
+    setCanvasHeight(h);
+    setProjectName(imported.name);
+
+    if (imported.palette.length > 0) {
+      setColorPalette(imported.palette);
+    }
+
+    // Set animations
+    const anims: Record<string, { frames: number[]; speed: number }> = {};
+    for (const [name, anim] of Object.entries(imported.animations)) {
+      anims[name] = { frames: anim.frames, speed: anim.speed };
+    }
+    setPixelAnimations(anims);
+    const firstAnim = Object.keys(anims)[0] ?? null;
+    setActivePixelAnim(firstAnim);
+
+    setTimeout(() => {
+      pixelCanvas.createCanvas(w, h, pixelCanvas.pixelSize);
+      const ctx = getCtx();
+      if (!ctx) return;
+
+      // Load first frame to canvas
+      if (imported.frames.length > 0) {
+        ctx.putImageData(imported.frames[0].imageData, 0, 0);
+      }
+
+      // Load all frames as ImageData
+      const frameImageDatas = imported.frames.map(f => f.imageData);
+      frames.loadFromImageDatas(frameImageDatas, w, h);
+
+      history.clearHistory();
+      history.saveState(ctx, w, h);
+      pixelCanvas.updatePreview();
+      drawGrid();
+    }, 0);
+  }, [pixelCanvas, history, frames, getCtx, drawGrid]);
+
   // Animation handlers
   const handleCreateAnim = useCallback((name: string) => {
     setPixelAnimations(prev => ({ ...prev, [name]: { frames: [], speed: 8 } }));
@@ -489,6 +534,12 @@ export function PixelArtPage() {
             className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
           >
             Limpiar
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            className="px-3 py-1.5 text-sm font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition"
+          >
+            Importar
           </button>
           <AsepriteImport
             onImport={handleAsepriteImport}
@@ -645,6 +696,11 @@ export function PixelArtPage() {
         animations={pixelAnimations}
         projectName={projectName}
         onProjectNameChange={setProjectName}
+      />
+      <ImportDialog
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onImport={handleProjectImport}
       />
     </div>
   );
