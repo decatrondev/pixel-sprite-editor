@@ -15,6 +15,7 @@ const mainRoutes = require('./routes/mainRoutes');
 const authRoutes = require('./routes/authRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const pixelArtRoutes = require('./routes/pixelArtRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3011;
@@ -43,6 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '10mb' }));
 
 // --- Sesiones en PostgreSQL ---
+app.set('trust proxy', 1);
 app.use(session({
     store: new PgSession({
         pool: pool,
@@ -74,6 +76,7 @@ app.use('/', mainRoutes);
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/pixelart', pixelArtRoutes);
+app.use('/api/admin', adminRoutes);
 
 // --- Error handler global ---
 app.use((err, req, res, next) => {
