@@ -132,6 +132,16 @@ export function useFrames(initialWidth: number, initialHeight: number) {
     });
   }, []);
 
+  const loadFromImageDatas = useCallback((imageDatas: ImageData[], _w: number, _h: number) => {
+    framesRef.current = imageDatas.map(id => {
+      const copy = new ImageData(new Uint8ClampedArray(id.data), id.width, id.height);
+      return copy;
+    });
+    setFrameCount(framesRef.current.length);
+    setCurrentFrameIndex(0);
+    void _w; void _h;
+  }, []);
+
   const resizeFrames = useCallback((newW: number, newH: number) => {
     const tempCanvas = document.createElement('canvas');
     const tctx = tempCanvas.getContext('2d')!;
@@ -170,6 +180,7 @@ export function useFrames(initialWidth: number, initialHeight: number) {
     setCurrentFrame,
     getAllFramesAsDataURLs,
     loadFramesFromData,
+    loadFromImageDatas,
     resizeFrames,
     getFrameCount,
     exportBackgroundColor,

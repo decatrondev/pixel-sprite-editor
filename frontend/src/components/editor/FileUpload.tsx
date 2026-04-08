@@ -1,23 +1,19 @@
 import { useRef, useState, useCallback } from 'react';
 import { toast } from '../common/Toast';
+import { parseAseprite } from '../../utils/aseprite';
 
 interface FileUploadProps {
   onImageLoaded: (img: HTMLImageElement, filename: string) => void;
   hasImage: boolean;
 }
 
-const VALID_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
+const VALID_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
 
 export function FileUpload({ onImageLoaded, hasImage }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  const loadFile = useCallback((file: File) => {
-    if (!VALID_TYPES.includes(file.type)) {
-      toast('Formato de imagen no soportado. Usa PNG, JPG, GIF, WebP o BMP.', 'error');
-      return;
-    }
-
+  const loadImageFile = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -25,13 +21,54 @@ export function FileUpload({ onImageLoaded, hasImage }: FileUploadProps) {
         onImageLoaded(img, file.name);
         toast('Imagen cargada correctamente.', 'success');
       };
-      img.onerror = () => {
-        toast('Error al cargar la imagen.', 'error');
-      };
+      img.onerror = () => toast('Error al cargar la imagen.', 'error');
       img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
   }, [onImageLoaded]);
+
+  const loadAsepriteFile = useCallback(async (file: File) => {
+    try {
+      const buffer = await file.arrayBuffer();
+      const ase = parseAseprite(buffer);
+
+      // Convert aseprite frames to a horizontal spritesheet
+      const cols = ase.frames.length;
+      const sheetWidth = ase.width * cols;
+      const sheetHeight = ase.height;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = sheetWidth;
+      canvas.height = sheetHeight;
+      const ctx = canvas.getContext('2d')!;
+
+      for (let i = 0; i < ase.frames.length; i++) {
+        ctx.putImageData(ase.frames[i].imageData, i * ase.width, 0);
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        onImageLoaded(img, file.name.replace(/\.(ase|aseprite)$/i, '.png'));
+        toast(`Aseprite importado: ${ase.frames.length} frames como spritesheet (${sheetWidth}x${sheetHeight})`, 'success');
+      };
+      img.src = canvas.toDataURL('image/png');
+    } catch (err) {
+      console.error('Error parsing aseprite:', err);
+      toast('Error al leer el archivo .aseprite', 'error');
+    }
+  }, [onImageLoaded]);
+
+  const loadFile = useCallback((file: File) => {
+    if (file.name.match(/\.(ase|aseprite)$/i)) {
+      loadAsepriteFile(file);
+      return;
+    }
+    if (!VALID_IMAGE_TYPES.includes(file.type)) {
+      toast('Formato no soportado. Usa PNG, JPG, GIF, WebP, BMP o .aseprite', 'error');
+      return;
+    }
+    loadImageFile(file);
+  }, [loadImageFile, loadAsepriteFile]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -52,6 +89,7 @@ export function FileUpload({ onImageLoaded, hasImage }: FileUploadProps) {
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) loadFile(file);
+    e.target.value = '';
   }, [loadFile]);
 
   if (hasImage) return null;
@@ -71,7 +109,7 @@ export function FileUpload({ onImageLoaded, hasImage }: FileUploadProps) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.ase,.aseprite"
         onChange={handleInputChange}
         className="hidden"
       />
@@ -85,7 +123,7 @@ export function FileUpload({ onImageLoaded, hasImage }: FileUploadProps) {
         o haz clic para seleccionar un archivo
       </p>
       <p className="text-gray-400 text-xs mt-2">
-        PNG, JPG, GIF, WebP, BMP
+        PNG, JPG, GIF, WebP, BMP, <span className="text-purple-500 font-medium">.aseprite</span>
       </p>
     </div>
   );

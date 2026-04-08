@@ -12,6 +12,8 @@ import { CanvasControls } from '../components/pixelart/CanvasControls';
 import { ExportDialog } from '../components/pixelart/ExportDialog';
 import { ProjectPanel } from '../components/pixelart/ProjectPanel';
 import { toast } from '../components/common/Toast';
+import { AsepriteImport } from '../components/common/AsepriteImport';
+import type { AsepriteFile } from '../utils/aseprite';
 
 export function PixelArtPage() {
   const [canvasWidth, setCanvasWidth] = useState(64);
@@ -359,6 +361,41 @@ export function PixelArtPage() {
     }, 0);
   }, [pixelCanvas, history, frames, getCtx, drawGrid]);
 
+  const handleAsepriteImport = useCallback((aseFile: AsepriteFile) => {
+    const w = aseFile.width;
+    const h = aseFile.height;
+    setCanvasWidth(w);
+    setCanvasHeight(h);
+
+    if (aseFile.palette.length > 0) {
+      setColorPalette(aseFile.palette);
+    }
+
+    setTimeout(() => {
+      pixelCanvas.createCanvas(w, h, pixelCanvas.pixelSize);
+      const ctx = getCtx();
+      if (!ctx) return;
+
+      // Load first frame to canvas
+      ctx.putImageData(aseFile.frames[0].imageData, 0, 0);
+
+      // Load all frames
+      const frameImageDatas = aseFile.frames.map(f => f.imageData);
+      frames.loadFromImageDatas(frameImageDatas, w, h);
+
+      history.clearHistory();
+      history.saveState(ctx, w, h);
+      pixelCanvas.updatePreview();
+      drawGrid();
+
+      // Log tags info
+      if (aseFile.tags.length > 0) {
+        const tagNames = aseFile.tags.map(t => `${t.name} (${t.from}-${t.to})`).join(', ');
+        toast(`Tags encontrados: ${tagNames}`, 'info');
+      }
+    }, 0);
+  }, [pixelCanvas, history, frames, getCtx, drawGrid]);
+
   const currentSettings: EditorSettings = {
     showGrid,
     brushSize,
@@ -397,6 +434,11 @@ export function PixelArtPage() {
           >
             Limpiar
           </button>
+          <AsepriteImport
+            onImport={handleAsepriteImport}
+            className="px-3 py-1.5 text-sm font-medium rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition"
+            label=".aseprite"
+          />
           <button
             onClick={() => setShowExport(true)}
             className="px-3 py-1.5 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
